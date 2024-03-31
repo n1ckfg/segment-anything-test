@@ -118,7 +118,7 @@ def import_point_cloud(url, colors=False):
     return point_cloud
 
 def color_point_cloud(image, point_cloud, mapping):
-  image = cv2.resize(image, (500, 1000))
+  image = cv2.resize(image, (len(mapping[0]), len(mapping)))
   h, w = image.shape[:2]
   modified_point_cloud = np.zeros((point_cloud.shape[0], point_cloud.shape[1]+3), dtype=np.float32)
   modified_point_cloud[:, :3] = point_cloud
