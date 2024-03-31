@@ -8,7 +8,7 @@ import torch
 from segment_anything import sam_model_registry
 from segment_anything import SamAutomaticMaskGenerator
 
-def setup(model_name="vit_b"):
+def setup(model_name="vit_b", reduce_memory=True):
   device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
   
   model_version = None
@@ -24,7 +24,11 @@ def setup(model_name="vit_b"):
 
   sam = sam_model_registry[model_name](checkpoint = url)
   sam.to(device = device)
-  mask_generator = SamAutomaticMaskGenerator(sam)
+  mask_generator = None
+  if (reduce_memory == True):
+    mask_generator = SamAutomaticMaskGenerator(sam, points_per_batch=16)
+  else:
+    mask_generator = SamAutomaticMaskGenerator(sam)
 
   return mask_generator
 
@@ -97,11 +101,26 @@ def generate_spherical_image(center_coordinates, point_cloud, colors, resolution
 
   return image, mapping
 
-def color_point_cloud(image_path, point_cloud, mapping):
-  image = cv2.imread(image_path)
+def import_point_cloud(url, colors=False):
+  las = laspy.read(url)
+
+  coords = np.vstack((las.x, las.y, las.z))
+  point_cloud = coords.transpose()
+
+  if (colors == True):
+    r = (las.red/65535*255).astype(int)
+    g = (las.green/65535*255).astype(int)
+    b = (las.blue/65535*255).astype(int)
+    colors = np.vstack((r,g,b)).transpose()
+
+    return point_cloud, colors
+  else:
+    return point_cloud
+
+def color_point_cloud(image, point_cloud, mapping):
+  image = cv2.resize(image, (500, 1000))
   h, w = image.shape[:2]
-  modified_point_cloud = np.zeros((point_cloud.shape[0],
-  point_cloud.shape[1]+3), dtype=np.float32)
+  modified_point_cloud = np.zeros((point_cloud.shape[0], point_cloud.shape[1]+3), dtype=np.float32)
   modified_point_cloud[:, :3] = point_cloud
 
   for iy in range(h):
@@ -113,25 +132,23 @@ def color_point_cloud(image_path, point_cloud, mapping):
 
   return modified_point_cloud
 
-def export_point_cloud(cloud_path, modified_point_cloud):
+def export_point_cloud(url, point_cloud):
   # 1. Create a new header
   header = laspy.LasHeader(point_format=3, version="1.2")
   header.add_extra_dim(laspy.ExtraBytesParams(name="random", type=np.int32))
 
   # 2. Create a Las
   las_o = laspy.LasData(header)
-  las_o.x = modified_point_cloud[:,0]
-  las_o.y = modified_point_cloud[:,1]
-  las_o.z = modified_point_cloud[:,2]
-  las_o.red = modified_point_cloud[:,3]
-  las_o.green = modified_point_cloud[:,4]
-  las_o.blue = modified_point_cloud[:,5]
-  las_o.write(cloud_path)
-  print("Export succesful at: ", cloud_path)
+  las_o.x = point_cloud[:,0]
+  las_o.y = point_cloud[:,1]
+  las_o.z = point_cloud[:,2]
+  las_o.red = point_cloud[:,3]
+  las_o.green = point_cloud[:,4]
+  las_o.blue = point_cloud[:,5]
+  las_o.write(url)
+  print("Export successful at: ", url)
 
   return
 
-# Example
-#export_point_cloud("/content/pcd_results.las", modified_point_cloud)
 
 
