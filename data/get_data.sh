@@ -11,7 +11,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 cd $DIR
 
 wget https://fox-gieg.com/patches/github/n1ckfg/segment-anything/data/data.zip
-unzip data.zip
+unzip -j data.zip
 rm data.zip
 
 
