@@ -27,6 +27,7 @@ center_coordinates = [189, 60, 2]
 # Function Execution
 spherical_image, mapping = sw.generate_spherical_image(center_coordinates, point_cloud, colors, resolution)
 
+'''
 # Plotting with matplotlib
 fig = plt.figure(figsize=(np.shape(spherical_image)[1]/72,
 np.shape(spherical_image)[0]/72))
@@ -40,13 +41,14 @@ plt.savefig("output/ITC_BUILDING_spherical_projection.jpg")
 image_bgr = cv2.imread("output/ITC_BUILDING_spherical_projection.jpg")
 image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
 #t0 = time.time()
-result = mask_generator.generate(image_rgb)
+'''
+result = mask_generator.generate(spherical_image)
 #t1 = time.time()
 
-fig = plt.figure(figsize=(np.shape(image_rgb)[1]/72,
-np.shape(image_rgb)[0]/72))
+fig = plt.figure(figsize=(np.shape(spherical_image)[1]/72,
+np.shape(spherical_image)[0]/72))
 fig.add_axes([0,0,1,1])
-plt.imshow(image_rgb)
+plt.imshow(spherical_image)
 color_mask = sw.sam_masks(result)
 plt.axis('off')
 plt.savefig("output/ITC_BUILDING_spherical_projection_segmented.jpg")

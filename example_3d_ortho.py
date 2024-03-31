@@ -16,12 +16,15 @@ pcd_np = np.vstack((pcd.x, pcd.y, pcd.z, (pcd.red/65535*255).astype(int),
 (pcd.blue/65535*255).astype(int))).transpose()
 
 # Ortho-Projection
-orthoimage = sw.cloud_to_image(pcd_np, 1.5)
+ortho_image = sw.cloud_to_image(pcd_np, 1.5)
+
+result = mask_generator.generate(ortho_image)
 
 # Plotting and exporting
-fig = plt.figure(figsize=(np.shape(orthoimage)[1]/72,
-np.shape(orthoimage)[0]/72))
+fig = plt.figure(figsize=(np.shape(ortho_image)[1]/72,
+np.shape(ortho_image)[0]/72))
 fig.add_axes([0,0,1,1])
-plt.imshow(orthoimage)
+plt.imshow(ortho_image)
+color_mask = sw.sam_masks(result)
 plt.axis('off')
 plt.savefig("output/34FN2_18_orthoimage.jpg")
