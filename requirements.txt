@@ -1,0 +1,6 @@
+numpy
+matplotlib
+laspy
+opencv-python
+git+https://github.com/n1ckfg/segment-anything.git
+
