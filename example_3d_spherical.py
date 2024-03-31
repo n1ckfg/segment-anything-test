@@ -47,6 +47,6 @@ fig = plt.figure(figsize=(np.shape(image_rgb)[1]/72,
 np.shape(image_rgb)[0]/72))
 fig.add_axes([0,0,1,1])
 plt.imshow(image_rgb)
-color_mask = sam_masks(result)
+color_mask = sw.sam_masks(result)
 plt.axis('off')
 plt.savefig("output/ITC_BUILDING_spherical_projection_segmented.jpg")
