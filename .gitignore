@@ -4,4 +4,9 @@ data/*.jpg
 data/*.las
 data/*.pdf
 model/*.pth
-output/*
+output/*.jpg
+output/*.png
+output/*.tif
+output/*.las
+output/*.xyz
+output/*.asc
