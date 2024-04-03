@@ -97,10 +97,15 @@ def generate_spherical_image(center_coordinates, point_cloud, colors, resolution
     iy = np.clip(int(y[i]), 0, resolution_y - 1)
     if mapping[iy, ix] == -1 or np.linalg.norm(translated_points[i]) < np.linalg.norm(translated_points[mapping[iy, ix]]):
       mapping[iy, ix] = i
-      if (colors != None):
+      try:
         image[iy, ix] = colors[i]
+      except:
+        pass
 
   return image, mapping
+
+def remap(value, min1, max1, min2, max2):
+  return np.interp(value,[min1, max1],[min2, max2])
 
 def import_point_cloud(url, use_colors=False):
   las = laspy.read(url)
@@ -110,13 +115,18 @@ def import_point_cloud(url, use_colors=False):
 
   if (use_colors == True):
     colors = None
+    
     try:
       r = (las.red/65535*255).astype(int)
       g = (las.green/65535*255).astype(int)
       b = (las.blue/65535*255).astype(int)
       colors = np.vstack((r,g,b)).transpose()
     except:
-      print("No color data found.")
+      print("No color data found, generating gradient.")
+
+      max_elevation = max(las.z)
+      min_elevation = min(las.z)
+      colors = remap(las.z, min_elevation, max_elevation, 0, 255)
 
     return point_cloud, colors
   else:
