@@ -75,7 +75,8 @@ def cloud_to_ortho_image(point_cloud, colors, resolution):
 
 def generate_spherical_image(point_cloud, colors, resolution_y=500, center_coordinates=None):
     if not center_coordinates:
-        center_coordinates = np.mean(point_cloud)
+        pos = np.average(point_cloud, axis=0)
+        center_coordinates = [pos[0], pos[1], pos[2]]
 
     # Translate the point cloud by the negation of the center coordinates
     translated_points = point_cloud - center_coordinates
