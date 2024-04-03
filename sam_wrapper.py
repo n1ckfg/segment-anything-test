@@ -73,7 +73,10 @@ def cloud_to_ortho_image(point_cloud, colors, resolution):
 
     return image
 
-def generate_spherical_image(center_coordinates, point_cloud, colors, resolution_y=500):
+def generate_spherical_image(point_cloud, colors, resolution_y=500, center_coordinates=None):
+    if not center_coordinates:
+        center_coordinates = np.mean(point_cloud)
+
     # Translate the point cloud by the negation of the center coordinates
     translated_points = point_cloud - center_coordinates
 
@@ -107,26 +110,52 @@ def generate_spherical_image(center_coordinates, point_cloud, colors, resolution
 def remap(value, min1, max1, min2, max2):
     return np.interp(value,[min1, max1],[min2, max2])
 
-def import_point_cloud(url):
+def import_point_cloud(url, overrideColors=False, bpc=16):
     las = laspy.read(url)
 
     coords = np.vstack((las.x, las.y, las.z))
     point_cloud = coords.transpose()
 
     colors = None
-    
+    readColorsFailed = False
+    r = None
+    g = None
+    b = None
+    intensity = None
+
     try:
-        r = (las.red/65535*255).astype(int)
-        g = (las.green/65535*255).astype(int)
-        b = (las.blue/65535*255).astype(int)
-        colors = np.vstack((r,g,b)).transpose()
+        if (bpc == 16):
+            r = (las.red/65535*255).astype(int)
+            g = (las.green/65535*255).astype(int)
+            b = (las.blue/65535*255).astype(int)
+        else:
+            r = (las.red).astype(int)
+            g = (las.green).astype(int)
+            b = (las.blue).astype(int)
         print("Found color data.")
     except:
-        print("No color data found, generating gradient.")
+        print("No color data found.")
+        readColorsFailed = True
 
-        max_elevation = max(las.z)
-        min_elevation = min(las.z)
-        colors = remap(las.z, min_elevation, max_elevation, 0, 255)
+    if (readColorsFailed == True or overrideColors == True):
+        try:
+            if (bpc == 16):
+                intensity = (las.intensity/65535*255).astype(int)
+            else:
+                intensity = (las.intensity).astype(int)
+            print("Found intensity data.")
+        except:
+            print("No intensity data found.")
+            max_elevation = np.max(las.z)
+            min_elevation = np.min(las.z)
+            intensity = remap(las.z, min_elevation, max_elevation, 0, 255)            
+            print("Generated a gradient based on elevation.")
+
+        r = intensity
+        g = intensity
+        b = intensity
+
+    colors = np.vstack((r,g,b)).transpose()
 
     return point_cloud, colors
 

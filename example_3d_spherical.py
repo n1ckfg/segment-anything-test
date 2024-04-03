@@ -15,7 +15,7 @@ resolution = 500
 # Defining the position in the point cloud to generate a panorama
 center_coordinates = [189, 60, 2]
 
-spherical_image, mapping = sw.generate_spherical_image(center_coordinates, point_cloud, colors, resolution)
+spherical_image, mapping = sw.generate_spherical_image(point_cloud, colors, resolution, center_coordinates)
 
 result = mask_generator.generate(spherical_image)
 
