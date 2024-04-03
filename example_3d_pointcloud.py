@@ -22,18 +22,7 @@ except:
 
 mask_generator = sw.setup(modelType, saveMemoryMode)
 
-'''las = laspy.read(inputUrl)
-
-coords = np.vstack((las.x, las.y, las.z))
-point_cloud = coords.transpose()
-
-r=(las.red/65535*255).astype(int)
-g=(las.green/65535*255).astype(int)
-b=(las.blue/65535*255).astype(int)
-colors = np.vstack((r,g,b)).transpose()
-'''
-
-point_cloud, colors = sw.import_point_cloud(inputUrl, True)
+point_cloud, colors = sw.import_point_cloud(inputUrl)
 
 resolution = 500
 
@@ -42,18 +31,13 @@ center_coordinates = [189, 60, 2]
 spherical_image, mapping = sw.generate_spherical_image(center_coordinates, point_cloud, colors, resolution)
 
 spherical_image_rgb = cv2.cvtColor(spherical_image, cv2.COLOR_BGR2RGB)
-cv2.imwrite("spherical_projection_preview.jpg", spherical_image_rgb)
+cv2.imwrite("output/spherical_projection_preview.jpg", spherical_image_rgb)
 
 result = mask_generator.generate(spherical_image)
 
-fig = plt.figure(figsize=(np.shape(spherical_image)[1]/72, np.shape(spherical_image)[0]/72))
-fig.add_axes([0,0,1,1])
-plt.imshow(spherical_image)
-color_mask = sw.sam_masks(result)
-plt.axis('off')
-
 imgUrl = "output/spherical_projection_segmented.jpg"
-plt.savefig(imgUrl)
+
+sw.plot_image(spherical_image, result, imgUrl)
 
 image = cv2.imread(imgUrl)
 
