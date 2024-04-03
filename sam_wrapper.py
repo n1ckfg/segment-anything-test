@@ -111,7 +111,7 @@ def generate_spherical_image(point_cloud, colors, resolution_y=500, center_coord
 def remap(value, min1, max1, min2, max2):
     return np.interp(value,[min1, max1],[min2, max2])
 
-def import_point_cloud(url, overrideColors=False, bpc=16):
+def import_point_cloud(url, overrideColors=False):
     las = laspy.read(url)
 
     coords = np.vstack((las.x, las.y, las.z))
@@ -125,7 +125,7 @@ def import_point_cloud(url, overrideColors=False, bpc=16):
     intensity = None
 
     try:
-        if (bpc == 16):
+        if (las.red[0].dtype == "uint16"):
             r = (las.red/65535*255).astype(int)
             g = (las.green/65535*255).astype(int)
             b = (las.blue/65535*255).astype(int)
@@ -135,27 +135,30 @@ def import_point_cloud(url, overrideColors=False, bpc=16):
             b = (las.blue).astype(int)
         print("Found color data.")
     except:
-        print("No color data found.")
+        print("No color data found, using intensity.")
         readColorsFailed = True
 
     if (readColorsFailed == True or overrideColors == True):
         try:
-            if (bpc == 16):
+            if (las.intensity[0].dtype == "uint16"):
                 intensity = (las.intensity/65535*255).astype(int)
             else:
                 intensity = (las.intensity).astype(int)
             print("Found intensity data.")
         except:
-            print("No intensity data found.")
+            print("No intensity data found, using elevation as intensity.")
             max_elevation = np.max(las.z)
             min_elevation = np.min(las.z)
-            intensity = remap(las.z, min_elevation, max_elevation, 0, 255)            
-            print("Generated a gradient based on elevation.")
+            intensity = remap(las.z, min_elevation, max_elevation, 0, 255).astype(int)            
 
         r = intensity
         g = intensity
         b = intensity
 
+    if (len(intensity) < 1):
+        print("Used color.")
+    else:
+        print("Used intensity.")
     colors = np.vstack((r,g,b)).transpose()
 
     return point_cloud, colors
@@ -189,7 +192,7 @@ def export_point_cloud(url, point_cloud):
     las_o.green = point_cloud[:,4]
     las_o.blue = point_cloud[:,5]
     las_o.write(url)
-    print("Export successful at: ", url)
+    print("Point cloud export successful at: ", url)
 
     return
 
@@ -201,5 +204,6 @@ def plot_image(image, result, saveUrl=None):
     plt.axis("off")
     if (saveUrl != None):
         plt.savefig(saveUrl)
+    print("Saved plot image.")
 
 

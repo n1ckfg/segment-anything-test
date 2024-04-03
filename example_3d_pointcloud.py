@@ -32,6 +32,7 @@ spherical_image, mapping = sw.generate_spherical_image(point_cloud, colors, reso
 
 spherical_image_rgb = cv2.cvtColor(spherical_image, cv2.COLOR_BGR2RGB)
 cv2.imwrite("output/spherical_projection_preview.jpg", spherical_image_rgb)
+print("Saved spherical projection preview.")
 
 result = mask_generator.generate(spherical_image)
 
