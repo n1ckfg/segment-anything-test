@@ -22,7 +22,7 @@ except:
 
 mask_generator = sw.setup(modelType, saveMemoryMode)
 
-point_cloud, colors = sw.import_point_cloud(inputUrl, True)
+point_cloud, colors = sw.import_point_cloud(inputUrl)
 
 resolution = 500
 

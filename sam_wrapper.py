@@ -135,7 +135,7 @@ def import_point_cloud(url, overrideColors=False):
             b = (las.blue).astype(int)
         print("Found color data.")
     except:
-        print("No color data found, using intensity.")
+        print("No color data found, checking intensity.")
         readColorsFailed = True
 
     if (readColorsFailed == True or overrideColors == True):
@@ -155,7 +155,7 @@ def import_point_cloud(url, overrideColors=False):
         g = intensity
         b = intensity
 
-    if (len(intensity) < 1):
+    if (intensity == None or len(intensity) < 1):
         print("Used color.")
     else:
         print("Used intensity.")
