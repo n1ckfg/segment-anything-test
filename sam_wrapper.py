@@ -21,6 +21,7 @@ def setup(model_name="vit_b", reduce_memory=True):
         model_version = "01ec64"
 
     url = "model/sam_" + model_name + "_" + model_version + ".pth"
+    print("Using model: \"" + url + "\"")
 
     sam = sam_model_registry[model_name](checkpoint = url)
     sam.to(device = device)
@@ -155,12 +156,14 @@ def import_point_cloud(url, overrideColors=False):
         g = intensity
         b = intensity
 
-    if (intensity == None or len(intensity) < 1):
-        print("Used color.")
-    else:
+    try:
+        if (intensity == None):
+            print("Used color.")
+    except:
         print("Used intensity.")
     colors = np.vstack((r,g,b)).transpose()
 
+    print("Loaded: \"" + url + "\'")
     return point_cloud, colors
 
 def color_point_cloud(image, point_cloud, mapping):
@@ -192,7 +195,7 @@ def export_point_cloud(url, point_cloud):
     las_o.green = point_cloud[:,4]
     las_o.blue = point_cloud[:,5]
     las_o.write(url)
-    print("Point cloud export successful at: ", url)
+    print("Point cloud export successful at: \"" + url + "\"")
 
     return
 
@@ -204,6 +207,6 @@ def plot_image(image, result, saveUrl=None):
     plt.axis("off")
     if (saveUrl != None):
         plt.savefig(saveUrl)
-    print("Saved plot image.")
+    print("Saved plot image: \"" + saveUrl + "\"")
 
 

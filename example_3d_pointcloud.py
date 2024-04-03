@@ -18,7 +18,7 @@ try:
 except:
 	inputUrl = "data/ITC_BUILDING.las"
 	modelType = "vit_b"
-	print("Loading default file with " + modelType + ".")
+	print("Using test defaults.")
 
 mask_generator = sw.setup(modelType, saveMemoryMode)
 
