@@ -40,4 +40,4 @@ image = cv2.imread(imgUrl)
 
 modified_point_cloud = sw.color_point_cloud(image, point_cloud, mapping)
 
-sw.export_point_cloud("output/pcd_results.las", modified_point_cloud)
+sw.export_point_cloud("output/pcd_results.ply", modified_point_cloud)

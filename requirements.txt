@@ -1,6 +1,7 @@
 numpy
 matplotlib
 laspy
+trimesh
 opencv-python
 git+https://github.com/n1ckfg/segment-anything.git
 

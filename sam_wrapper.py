@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import laspy
+import trimesh
 
 import torch
 from segment_anything import sam_model_registry
@@ -114,59 +115,67 @@ def remap(value, min1, max1, min2, max2):
     return np.interp(value,[min1, max1],[min2, max2])
 
 def import_point_cloud(url, overrideColors=False, doNormalize=False):
-    las = laspy.read(url)
-
     point_cloud = None
-    if(doNormalize == True):
-        x, y, z = normalize(las.x, las.y, las.z)
-        point_cloud = np.vstack((x, y, z)).transpose()
-    else:
-        point_cloud = np.vstack((las.x, las.y, las.z)).transpose()
-
     colors = None
-    readColorsFailed = False
     r = None
     g = None
     b = None
-    intensity = None
+    readColorsFailed = False
 
-    try:
-        if (las.red[0].dtype == "uint16"):
-            r = (las.red/65535*255).astype(int)
-            g = (las.green/65535*255).astype(int)
-            b = (las.blue/65535*255).astype(int)
+    if (url.endswith("las")):
+        las = laspy.read(url)
+
+        if(doNormalize == True):
+            x, y, z = normalize(las.x, las.y, las.z)
+            point_cloud = np.vstack((x, y, z)).transpose()
         else:
-            r = (las.red).astype(int)
-            g = (las.green).astype(int)
-            b = (las.blue).astype(int)
-        print("Found color data.")
-    except:
-        print("No color data found, checking intensity.")
-        readColorsFailed = True
+            point_cloud = np.vstack((las.x, las.y, las.z)).transpose()
 
-    if (readColorsFailed == True or overrideColors == True):
+        intensity = None
+
         try:
-            if (las.intensity[0].dtype == "uint16"):
-                intensity = (las.intensity/65535*255).astype(int)
+            if (las.red[0].dtype == "uint16"):
+                r = (las.red/65535*255).astype(int)
+                g = (las.green/65535*255).astype(int)
+                b = (las.blue/65535*255).astype(int)
             else:
-                intensity = (las.intensity).astype(int)
-            print("Found intensity data.")
+                r = (las.red).astype(int)
+                g = (las.green).astype(int)
+                b = (las.blue).astype(int)
+            print("Found color data.")
         except:
-            print("No intensity data found, using elevation as intensity.")
-            max_elevation = np.max(las.z)
-            min_elevation = np.min(las.z)
-            intensity = remap(las.z, min_elevation, max_elevation, 0, 255).astype(int)            
+            print("No color data found, checking intensity.")
+            readColorsFailed = True
 
-        r = intensity
-        g = intensity
-        b = intensity
+        if (readColorsFailed == True or overrideColors == True):
+            try:
+                if (las.intensity[0].dtype == "uint16"):
+                    intensity = (las.intensity/65535*255).astype(int)
+                else:
+                    intensity = (las.intensity).astype(int)
+                print("Found intensity data.")
+            except:
+                print("No intensity data found, using elevation as intensity.")
+                max_elevation = np.max(las.z)
+                min_elevation = np.min(las.z)
+                intensity = remap(las.z, min_elevation, max_elevation, 0, 255).astype(int)            
 
-    try:
-        if (intensity == None):
-            print("Used color.")
-    except:
-        print("Used intensity.")
-    colors = np.vstack((r, g, b)).transpose()
+            r = intensity
+            g = intensity
+            b = intensity
+
+        try:
+            if (intensity == None):
+                print("Used color.")
+        except:
+            print("Used intensity.")
+        colors = np.vstack((r, g, b)).transpose()
+    elif (url.endswith("ply")):
+        mesh = trimesh.load_mesh(url)
+        point_cloud = mesh.vertices
+        colors = mesh.colors[:, :3] # get rid of the alpha value
+
+    print(colors)
 
     print("Loaded: \"" + url + "\"")
     return point_cloud, colors
@@ -187,20 +196,27 @@ def color_point_cloud(image, point_cloud, mapping):
     return modified_point_cloud
 
 def export_point_cloud(url, point_cloud):
-    # 1. Create a new header
-    header = laspy.LasHeader(point_format=3, version="1.2")
-    header.add_extra_dim(laspy.ExtraBytesParams(name="random", type=np.int32))
+    if (url.endswith("las")):
+        # header
+        header = laspy.LasHeader(point_format=3, version="1.2")
+        header.add_extra_dim(laspy.ExtraBytesParams(name="random", type=np.int32))
 
-    # 2. Create a Las
-    las_o = laspy.LasData(header)
-    las_o.x = point_cloud[:,0]
-    las_o.y = point_cloud[:,1]
-    las_o.z = point_cloud[:,2]
-    las_o.red = point_cloud[:,3]
-    las_o.green = point_cloud[:,4]
-    las_o.blue = point_cloud[:,5]
-    las_o.write(url)
-    print("Point cloud export successful at: \"" + url + "\"")
+        # body
+        las_o = laspy.LasData(header)
+        las_o.x = point_cloud[:,0]
+        las_o.y = point_cloud[:,1]
+        las_o.z = point_cloud[:,2]
+        las_o.red = point_cloud[:,3]
+        las_o.green = point_cloud[:,4]
+        las_o.blue = point_cloud[:,5]
+        las_o.write(url)
+    elif (url.endswith("ply")):
+        vertices = np.stack((point_cloud[:,0], point_cloud[:,1], point_cloud[:,2]), axis=-1)
+        vertex_colors = np.stack((point_cloud[:,3], point_cloud[:,4], point_cloud[:,5]), axis=-1)
+        mesh = trimesh.Trimesh(vertices=vertices, vertex_colors=vertex_colors)
+        mesh.export(url, file_type="ply") 
+    
+    print("Point cloud exported to: \"" + url + "\"")
 
     return
 

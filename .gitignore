@@ -3,6 +3,7 @@ __pycache__/*
 data/*.jpg
 data/*.las
 data/*.pdf
+data/*.ply
 model/*.pth
 output/*.jpg
 output/*.png
@@ -10,3 +11,4 @@ output/*.tif
 output/*.las
 output/*.xyz
 output/*.asc
+output/*.ply
