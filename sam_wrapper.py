@@ -78,6 +78,7 @@ def generate_spherical_image(point_cloud, colors, resolution_y=500, center_coord
     if not center_coordinates:
         pos = np.average(point_cloud, axis=0)
         center_coordinates = [pos[0], pos[1], pos[2]]
+    print("Center coordinates: " + str(center_coordinates))
 
     # Translate the point cloud by the negation of the center coordinates
     translated_points = point_cloud - center_coordinates
@@ -112,11 +113,15 @@ def generate_spherical_image(point_cloud, colors, resolution_y=500, center_coord
 def remap(value, min1, max1, min2, max2):
     return np.interp(value,[min1, max1],[min2, max2])
 
-def import_point_cloud(url, overrideColors=False):
+def import_point_cloud(url, overrideColors=False, doNormalize=False):
     las = laspy.read(url)
 
-    coords = np.vstack((las.x, las.y, las.z))
-    point_cloud = coords.transpose()
+    point_cloud = None
+    if(doNormalize == True):
+        x, y, z = normalize(las.x, las.y, las.z)
+        point_cloud = np.vstack((x, y, z)).transpose()
+    else:
+        point_cloud = np.vstack((las.x, las.y, las.z)).transpose()
 
     colors = None
     readColorsFailed = False
@@ -161,7 +166,7 @@ def import_point_cloud(url, overrideColors=False):
             print("Used color.")
     except:
         print("Used intensity.")
-    colors = np.vstack((r,g,b)).transpose()
+    colors = np.vstack((r, g, b)).transpose()
 
     print("Loaded: \"" + url + "\"")
     return point_cloud, colors
@@ -209,4 +214,35 @@ def plot_image(image, result, saveUrl=None):
         plt.savefig(saveUrl)
     print("Saved plot image: \"" + saveUrl + "\"")
 
+def normalize(x, y, z, minVal=0.0, maxVal=1.0):
+    leastX = np.min(x)
+    leastY = np.min(y)
+    leastZ = np.min(z)
+    mostX = np.max(x)
+    mostY = np.max(y)
+    mostZ = np.max(z)
+    
+    leastValArray = [ leastX, leastY, leastZ ]
+    mostValArray = [ mostX, mostY, mostZ ]
+    leastValArray.sort()
+    mostValArray.sort()
+    leastVal = leastValArray[0]
+    mostVal = mostValArray[2]
+    valRange = mostVal - leastVal
+    
+    xRange = (mostX - leastX) / valRange
+    yRange = (mostY - leastY) / valRange
+    zRange = (mostZ - leastZ) / valRange
+    
+    minValX = minVal * xRange
+    minValY = minVal * yRange
+    minValZ = minVal * zRange
+    maxValX = maxVal * xRange
+    maxValY = maxVal * yRange
+    maxValZ = maxVal * zRange
 
+    x = remap(x, leastX, mostX, minValX, maxValX)
+    y = remap(y, leastY, mostY, minValY, maxValY)
+    z = remap(z, leastZ, mostZ, minValZ, maxValZ)
+
+    return x, y, z

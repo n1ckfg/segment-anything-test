@@ -24,11 +24,7 @@ mask_generator = sw.setup(modelType, saveMemoryMode)
 
 point_cloud, colors = sw.import_point_cloud(inputUrl)
 
-resolution = 500
-
-center_coordinates = [189, 60, 2]
-
-spherical_image, mapping = sw.generate_spherical_image(point_cloud, colors, resolution, center_coordinates=None)
+spherical_image, mapping = sw.generate_spherical_image(point_cloud, colors)
 
 spherical_image_rgb = cv2.cvtColor(spherical_image, cv2.COLOR_BGR2RGB)
 cv2.imwrite("output/spherical_projection_preview.jpg", spherical_image_rgb)
