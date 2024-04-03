@@ -97,21 +97,26 @@ def generate_spherical_image(center_coordinates, point_cloud, colors, resolution
     iy = np.clip(int(y[i]), 0, resolution_y - 1)
     if mapping[iy, ix] == -1 or np.linalg.norm(translated_points[i]) < np.linalg.norm(translated_points[mapping[iy, ix]]):
       mapping[iy, ix] = i
-      image[iy, ix] = colors[i]
+      if (colors != None):
+        image[iy, ix] = colors[i]
 
   return image, mapping
 
-def import_point_cloud(url, colors=False):
+def import_point_cloud(url, use_colors=False):
   las = laspy.read(url)
 
   coords = np.vstack((las.x, las.y, las.z))
   point_cloud = coords.transpose()
 
-  if (colors == True):
-    r = (las.red/65535*255).astype(int)
-    g = (las.green/65535*255).astype(int)
-    b = (las.blue/65535*255).astype(int)
-    colors = np.vstack((r,g,b)).transpose()
+  if (use_colors == True):
+    colors = None
+    try:
+      r = (las.red/65535*255).astype(int)
+      g = (las.green/65535*255).astype(int)
+      b = (las.blue/65535*255).astype(int)
+      colors = np.vstack((r,g,b)).transpose()
+    except:
+      print("No color data found.")
 
     return point_cloud, colors
   else:
