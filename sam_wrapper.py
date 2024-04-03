@@ -9,7 +9,7 @@ from segment_anything import sam_model_registry
 from segment_anything import SamAutomaticMaskGenerator
 
 def setup(model_name="vit_b", reduce_memory=True):
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     model_version = None
     
@@ -163,7 +163,7 @@ def import_point_cloud(url, overrideColors=False):
         print("Used intensity.")
     colors = np.vstack((r,g,b)).transpose()
 
-    print("Loaded: \"" + url + "\'")
+    print("Loaded: \"" + url + "\"")
     return point_cloud, colors
 
 def color_point_cloud(image, point_cloud, mapping):
