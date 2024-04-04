@@ -148,14 +148,20 @@ def import_point_cloud(url, overrideColors=False, doNormalize=False):
             readColorsFailed = True
 
         if (readColorsFailed == True or overrideColors == True):
+            generateReplacement = False
             try:
                 if (las.intensity[0].dtype == "uint16"):
                     intensity = (las.intensity/65535*255).astype(int)
                 else:
                     intensity = (las.intensity).astype(int)
                 print("Found intensity data.")
+                if (np.all(intensity == 0)):
+                    generateReplacement = True
             except:
-                print("No intensity data found, using elevation as intensity.")
+                generateReplacement = True
+
+            if (generateReplacement == True):
+                print("No valid intensity data found, using elevation as intensity.")
                 max_elevation = np.max(las.z)
                 min_elevation = np.min(las.z)
                 intensity = remap(las.z, min_elevation, max_elevation, 0, 255).astype(int)            
@@ -193,7 +199,7 @@ def color_point_cloud(image, point_cloud, mapping):
 
     return modified_point_cloud
 
-def export_point_cloud(url, point_cloud):
+def export_point_cloud(url, point_cloud, colors = []):
     if (url.endswith("las")):
         # header
         header = laspy.LasHeader(point_format=3, version="1.2")
@@ -201,16 +207,29 @@ def export_point_cloud(url, point_cloud):
 
         # body
         las_o = laspy.LasData(header)
+
         las_o.x = point_cloud[:,0]
         las_o.y = point_cloud[:,1]
         las_o.z = point_cloud[:,2]
-        las_o.red = point_cloud[:,3]
-        las_o.green = point_cloud[:,4]
-        las_o.blue = point_cloud[:,5]
+        
+        if (len(colors) > 0):
+            las_o.red = colors[:,0]
+            las_o.green = colors[:,1]
+            las_o.blue = colors[:,2]
+        else:
+            las_o.red = point_cloud[:,3]
+            las_o.green = point_cloud[:,4]
+            las_o.blue = point_cloud[:,5]
+
         las_o.write(url)
     elif (url.endswith("ply")):
         vertices = np.stack((point_cloud[:,0], point_cloud[:,1], point_cloud[:,2]), axis=-1)
-        vertex_colors = np.stack((point_cloud[:,3], point_cloud[:,4], point_cloud[:,5]), axis=-1)
+        vertex_colors = None
+        if (len(colors) > 0):
+            vertex_colors = np.stack((colors[:,0], colors[:,1], colors[:,2]), axis=-1)
+        else:
+            vertex_colors = np.stack((point_cloud[:,3], point_cloud[:,4], point_cloud[:,5]), axis=-1)
+
         mesh = trimesh.Trimesh(vertices=vertices, vertex_colors=vertex_colors)
         mesh.export(url, file_type="ply") 
     
