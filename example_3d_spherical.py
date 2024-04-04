@@ -1,14 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
-import laspy
 
 import sam_wrapper as sw
 
-mask_generator = sw.setup("vit_b")
+mask_generator = sw.setup()
 
 # Loading the las file from the disk
-point_cloud, colors = sw.import_point_cloud("data/ITC_BUILDING.las")
+point_cloud, colors = sw.import_point_cloud("data/ITC_BUILDING_small.ply")
 
 resolution = 500
 

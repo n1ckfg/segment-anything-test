@@ -175,8 +175,6 @@ def import_point_cloud(url, overrideColors=False, doNormalize=False):
         point_cloud = mesh.vertices
         colors = mesh.colors[:, :3] # get rid of the alpha value
 
-    print(colors)
-
     print("Loaded: \"" + url + "\"")
     return point_cloud, colors
 

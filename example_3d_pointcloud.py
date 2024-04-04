@@ -1,26 +1,22 @@
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
-import laspy
 
 import sam_wrapper as sw
 
 argv = sys.argv
 inputUrl = None
-modelType = None
-saveMemoryMode = False
+mask_generator = None
 
 try:
 	argv = argv[argv.index("--") + 1:] # get all args after "--"
 	modelType = argv[0]
 	inputUrl = argv[1]
+	mask_generator = sw.setup(modelType)
 except:
-	inputUrl = "data/ITC_BUILDING.las"
-	modelType = "vit_b"
 	print("Using test defaults.")
-
-mask_generator = sw.setup(modelType, saveMemoryMode)
+	inputUrl = "data/ITC_BUILDING_small.ply"
+	mask_generator = sw.setup()
 
 point_cloud, colors = sw.import_point_cloud(inputUrl)
 
